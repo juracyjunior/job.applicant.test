@@ -8,9 +8,9 @@ namespace BestHB.Controllers
     [Route("api/instrument")]
     public class InstrumentController : Controller
     {
-        private readonly IRepository _instrumentInfoRepository;
+        private readonly IInstrumentInfoRepository _instrumentInfoRepository;
 
-        public InstrumentController(IRepository instrumentInfoRepository)
+        public InstrumentController(IInstrumentInfoRepository instrumentInfoRepository)
         {
             _instrumentInfoRepository = instrumentInfoRepository;
         }
@@ -21,7 +21,7 @@ namespace BestHB.Controllers
         {
             try
             {
-                return Ok(await _instrumentInfoRepository.Get(symbol));
+                return Ok(await _instrumentInfoRepository.GetAsync(symbol));
             }
             catch (Exception ex)
             {

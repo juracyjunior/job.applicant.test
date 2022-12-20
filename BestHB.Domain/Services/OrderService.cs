@@ -1,33 +1,33 @@
 ﻿using BestHB.Domain.Commands;
 using BestHB.Domain.Entities;
+using BestHB.Domain.Models;
 using BestHB.Domain.Queries;
 using BestHB.Domain.Repositories;
 using BestHB.Domain.Service;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace BestHB.Domain.Services
 {
     public class OrderService : IOrderService
     {
-        private readonly IRepository _orderRepository;
-        private readonly IRepository _instrumentInfoRepository;
+        private readonly IOrderRepository _orderRepository;
+        private readonly IInstrumentInfoRepository _instrumentInfoRepository;
 
         private readonly OrderType[] _ordersThatShouldHaveExpireDate = new OrderType[] {
             OrderType.Limit,
             OrderType.Stop
         };
 
-        public OrderService(IRepository orderRepository, IRepository instrumentInfoRepository)
+        public OrderService(IOrderRepository orderRepository, IInstrumentInfoRepository instrumentInfoRepository)
         {
             _orderRepository = orderRepository;
             _instrumentInfoRepository = instrumentInfoRepository;
         }
 
-        public int Create(CreateOrderCommand createOrderCommand)
+        public async Task<int> CreateAsync(CreateOrderCommand createOrderCommand)
         {
 
             if (createOrderCommand.UserId <= 0)
@@ -42,13 +42,7 @@ namespace BestHB.Domain.Services
             if (string.IsNullOrWhiteSpace(createOrderCommand.Symbol))
                 throw new Exception("O instrumento deve conter valor.");
 
-            var instrumentInfo = Task.Run(
-                async () =>
-                {
-                    return await _instrumentInfoRepository.Get(createOrderCommand.Symbol);
-                })
-                .GetAwaiter()
-                .GetResult();
+            var instrumentInfo = await _instrumentInfoRepository.GetAsync(createOrderCommand.Symbol);
 
             if (!createOrderCommand.ExpiresAt.HasValue && _ordersThatShouldHaveExpireDate.Contains(createOrderCommand.Type))
                 throw new Exception("Para o tipo de ordem especificado a data de validade deve ser preenchida.");
@@ -77,27 +71,22 @@ namespace BestHB.Domain.Services
                 UserId = createOrderCommand.UserId
             };
 
-            return Task.Run(
-                    async () => {
-                        return await _orderRepository.Add(order);
-                    })
-                    .GetAwaiter()
-                    .GetResult();
+            return await _orderRepository.AddAsync(order);
         }
 
-        public Task<DeleteOrderStatus> Delete(DeleteOrderCommand deleteOrderCommand)
+        public Task<DeleteOrderStatus> DeleteAsync(DeleteOrderCommand deleteOrderCommand)
         {
             throw new NotImplementedException();
         }
 
-        public Task<int> Update(UpdateOrderCommand updateOrderCommand)
+        public Task<int> UpdateAsync(UpdateOrderCommand updateOrderCommand)
         {
             throw new NotImplementedException();
         }
 
-        public async Task<List<string>> AsCSV(QueryOrders queryOrders)
+        public async Task<IList<string>> AsCsvAsync(QueryOrders queryOrders)
         {
-            var orders = await _orderRepository.Get(queryOrders);
+            var orders = await _orderRepository.GetAsync(queryOrders);
 
             var csv = new List<string>();
 
@@ -106,6 +95,29 @@ namespace BestHB.Domain.Services
             });
 
             return csv;
+        }
+
+        public async Task<IList<Order>> GetAsync(QueryOrders queryOrders)
+        {
+            var orders = await _orderRepository.GetAsync(queryOrders);
+
+            return orders;
+        }
+
+        public async Task<ResultService<IEnumerable<Order>>> GetListByUserAsync(int userId)
+        {
+            var result = new ResultService<IEnumerable<Order>>();
+
+            if (userId == 0) {
+                result.Errors.Add("Identificador do usuário não informado.");
+                return result;
+            }
+
+            var orders = await _orderRepository.GetByUserAsync(userId);
+
+            result.Data = orders;
+
+            return result;
         }
     }
 }

@@ -15,12 +15,10 @@ namespace BestHB.Controllers
     public class OrdersController : Controller
     {
         public readonly OrderService _orderService;
-        private readonly IRepository _orderRepository;
 
-        public OrdersController(OrderService orderService, IRepository orderRepository)
+        public OrdersController(OrderService orderService)
         {
             _orderService = orderService;
-            _orderRepository = orderRepository;
         }
 
         [HttpPost]
@@ -29,7 +27,7 @@ namespace BestHB.Controllers
         {
             try
             {
-                var orderId = _orderService.Create(command);
+                var orderId = _orderService.CreateAsync(command);
                 return Ok(orderId);
             }
             catch (Exception ex)
@@ -44,7 +42,7 @@ namespace BestHB.Controllers
         {
             try
             {
-                var status = _orderService.Delete(command);
+                var status = _orderService.DeleteAsync(command);
                 return Ok(status);
             }
             catch (Exception ex)
@@ -59,7 +57,7 @@ namespace BestHB.Controllers
         {
             try
             {
-                var orders = await _orderRepository.Get(queryOrders);
+                var orders = await _orderService.GetAsync(queryOrders);
                 return Ok(orders);
             }
             catch (Exception ex)
@@ -74,7 +72,7 @@ namespace BestHB.Controllers
         {
             try
             {
-                return Ok(await _orderService.AsCSV(queryOrders));
+                return Ok(await _orderService.AsCsvAsync(queryOrders));
             }
             catch (Exception ex)
             {

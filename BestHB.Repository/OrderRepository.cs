@@ -1,33 +1,46 @@
-﻿using BestHB.Domain.Entities;
+﻿using BestHB.Domain.Commands;
+using BestHB.Domain.Entities;
 using BestHB.Domain.Queries;
 using BestHB.Domain.Repositories;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace BestHB.Repository
 {
-    public class OrderRepository : IRepository
+    public class OrderRepository : IOrderRepository
     {
-        public OrderRepository()
+        public async Task<int> AddAsync(Order order)
         {
-
+            return 123;
         }
 
-        public async Task<int> Add(Order order)
+        public async Task<List<Order>> GetAsync(QueryOrders queryOrders)
         {
-            return await Task.Run(() => { return 123; });
+            return new List<Order>();
         }
 
-        public async Task<List<Order>> Get(QueryOrders queryOrders)
+        public async Task<IEnumerable<Order>> GetByUserAsync(int userId)
         {
-            return await Task.Run(() => { return new List<Order>(); });
-        }
+            if (userId == 0) return null;
 
-        public Task<InstrumentInfo> Get(string symbol)
-        {
-            throw  new NotImplementedException();
+            var order = new Order {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Symbol = "",
+                Quantity = 1,
+                Side = OrderSide.Sell,
+                Type = OrderType.Market,
+                Status = OrderStatus.Executed,
+                Price = 1.0M,
+                TriggerPrice = 0,
+                ExpiresAt = null,
+                CreatedAt = DateTime.Now
+            };
+
+            return new List<Order>{ order };
         }
     }
 }
